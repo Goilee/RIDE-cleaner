@@ -1,6 +1,8 @@
 import subprocess
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+INTERVAL_IN_SECONDS = 300
+
 # удаляет контейнер и возвращает вывод команды
 def docker_remove(id):
     cmd = f'docker rm -f {id}'
@@ -36,5 +38,5 @@ def cleaner():
             docker_remove(container)
 
 scheduler = BlockingScheduler()
-scheduler.add_job(cleaner, 'interval', seconds=1)
+scheduler.add_job(cleaner, 'interval', seconds=INTERVAL_IN_SECONDS)
 scheduler.start()
