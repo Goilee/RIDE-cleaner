@@ -9,25 +9,24 @@ def docker_remove(id):
     print(result)
     return result
 
-
-def check_closing_logs(conteiner):
-    cmd = f'''docker logs {conteiner} 2>&1 | grep "Changed application state from 'ready' to 'closing_window'"'''
+# возвращает номер последней строки, содержащей подстроку line
+def find_last_line_in_logs(container, substr):
+    cmd = f'''docker logs {container} 2>&1 | grep -n "{substr}" | tail --lines=1'''
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    result = p.communicate()[0].decode("utf-8")[:-2]
-    result = result[10:]
+    result = p.communicate()[0].decode("utf-8")
+    lineNumber = int(result[0:result.index(':')])
+    return lineNumber
 
-    return result
 
-
-def cleaner(conteiner):
-    result = check_closing_logs(conteiner)
-    print(result)
-    if result == "Changed application state from 'ready' to 'closing_window'":
+def cleaner(container):
+    clientEnter = find_last_line_in_logs(container, "Set client")
+    clientExit = find_last_line_in_logs(container, "All contributions have been stopped")
+    if (clientExit > clientEnter):
         print("REMOVED")
         docker_remove(conteiner)
 
 
-conteiner = "471e32e7ff13"
+conteiner = "ride"
 
 scheduler = BlockingScheduler()
 scheduler.add_job(cleaner, 'interval', [conteiner], seconds=1)
